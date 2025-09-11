@@ -48,54 +48,36 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-data class ResGroup(
-    val imageRes: Int,
-    val contentDescRes: Int,
-    val textRes: Int
-)
+@Composable
+fun LemonTextAndImage(
+    textLabelResourceId: Int,
+    drawableResourceId: Int,
+    contentDescriptionResourceId: Int,
+    onImageClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Button(
+        shape = RoundedCornerShape(40.dp),
+        colors = ButtonDefaults.buttonColors(containerColor = Color(0xffc3ecd2)),
+        onClick = onImageClick
+    ) {
+        Image(
+            painter = painterResource(drawableResourceId),
+            contentDescription = stringResource(contentDescriptionResourceId),
+            modifier = modifier
+                .wrapContentSize()
+        )
+    }
+    Spacer(modifier = modifier.padding(16.dp))
+    Text(
+        text = stringResource(textLabelResourceId),
+    )
+}
 
 @Composable
 fun LemonadeApp(modifier: Modifier = Modifier) {
     var currentStep by remember { mutableIntStateOf(1) }
-    var requiredSqueezes by remember { mutableIntStateOf((2..4).random()) }
-    val resGroup = when (currentStep) {
-        1 -> ResGroup(
-            R.drawable.lemon_tree,
-            R.string.lemon_tree_content_description,
-            R.string.tap_to_select
-        )
-        2 -> ResGroup(
-            R.drawable.lemon_squeeze,
-            R.string.lemon_content_description,
-            R.string.tap_to_squeeze
-        )
-        3 -> ResGroup(
-            R.drawable.lemon_drink,
-            R.string.glass_of_lemonade_content_description,
-            R.string.tap_to_drink
-        )
-        else -> ResGroup(
-            R.drawable.lemon_restart,
-            R.string.empty_glass_content_description,
-            R.string.tap_to_restart
-        )
-    }
-
-    fun updateStep() {
-        if (currentStep == 2) {
-            if (--requiredSqueezes > 0) {
-                // Continue squeezing
-                return
-            } else {
-                // Finished squeezing, move to next step
-                requiredSqueezes = (2..4).random()
-            }
-        }
-        currentStep++
-        if (currentStep > 4) {
-            currentStep = 1
-        }
-    }
+    var requiredSqueezes by remember { mutableIntStateOf(0) }
 
     Row(
         modifier = modifier
@@ -117,21 +99,55 @@ fun LemonadeApp(modifier: Modifier = Modifier) {
             .wrapContentSize(Alignment.Center),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Button(
-            shape = RoundedCornerShape(40.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = Color(0xffc3ecd2)),
-            onClick = { updateStep() }) {
-            Image(
-                painter = painterResource(resGroup.imageRes),
-                contentDescription = stringResource(resGroup.contentDescRes),
-                modifier = Modifier
-                    .wrapContentSize()
-            )
+        when (currentStep) {
+            1 -> {
+                LemonTextAndImage(
+                    textLabelResourceId = R.string.tap_to_select,
+                    drawableResourceId = R.drawable.lemon_tree,
+                    contentDescriptionResourceId = R.string.lemon_tree_content_description,
+                    onImageClick = {
+                        currentStep = 2
+                        requiredSqueezes = (2..4).random()
+                    }
+                )
+            }
+
+            2 -> {
+                LemonTextAndImage(
+                    textLabelResourceId = R.string.tap_to_squeeze,
+                    drawableResourceId = R.drawable.lemon_squeeze,
+                    contentDescriptionResourceId = R.string.lemon_content_description,
+                    onImageClick = {
+                        requiredSqueezes--
+                        if (requiredSqueezes == 0) {
+                            currentStep = 3
+                        }
+                    }
+                )
+            }
+
+            3 -> {
+                LemonTextAndImage(
+                    textLabelResourceId = R.string.tap_to_drink,
+                    drawableResourceId = R.drawable.lemon_drink,
+                    contentDescriptionResourceId = R.string.glass_of_lemonade_content_description,
+                    onImageClick = {
+                        currentStep = 4
+                    }
+                )
+            }
+
+            4 -> {
+                LemonTextAndImage(
+                    textLabelResourceId = R.string.tap_to_restart,
+                    drawableResourceId = R.drawable.lemon_restart,
+                    contentDescriptionResourceId = R.string.empty_glass_content_description,
+                    onImageClick = {
+                        currentStep = 1
+                    }
+                )
+            }
         }
-        Spacer(modifier = Modifier.padding(16.dp))
-        Text(
-            text = stringResource(resGroup.textRes),
-        )
     }
 }
 
